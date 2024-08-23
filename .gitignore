@@ -1,0 +1,9 @@
+/driver/.*.cmd
+/driver/*.mod
+/driver/*.ko
+/driver/*.mod.c
+/driver/*.o
+/driver/Module.symvers
+/driver/modules.order
+/zig-out
+/.zig-cache
