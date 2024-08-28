@@ -78,6 +78,9 @@ fn toLinuxError(err: impl.FileError) i32 {
         impl.FileError.InvalidCharSet => -LinuxError.EINVAL,
         impl.FileError.InvalidCharSetClose => -LinuxError.EINVAL,
         impl.FileError.UserIo => -LinuxError.EIO,
+        impl.FileError.Unimplemented => -LinuxError.EINVAL,
+        // FIXME: nope
+        else => -LinuxError.EINVAL,
     };
 }
 

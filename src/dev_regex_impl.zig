@@ -61,7 +61,7 @@ pub const File = struct {
             const next_in_line = self.in_buf.items[0..newline_pos];
 
             if (self.matcher) |matcher| {
-                if (try matcher.matches(next_in_line)) {
+                if (try matcher.matches(self.alloc, next_in_line)) {
                     try self.out_buf.appendSlice(self.alloc, next_in_line);
                     try shiftBuf(self.alloc, &self.in_buf, next_in_line.len + 1);
                     return self.readOutputBuf(ptr, size);
@@ -78,6 +78,8 @@ pub const File = struct {
 
     pub fn setRegex(self: *File, alloc: Allocator, data: [*]u8, len: usize) FileError!void {
         const buf = try alloc.alloc(u8, len);
+        // FIXME: This leaks for sure right? Regex compile depends on this, but
+        // when file is closed we never free this cause it's lost
         errdefer alloc.free(buf);
 
         try copyFromUser(buf.ptr, data, len);

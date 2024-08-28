@@ -61,6 +61,8 @@ function renderMatchers(matchers, colors) {
     div.innerText = matchers[i];
     div.style.backgroundColor = colors[i];
     div.style.width = "fit-content";
+    div.style.minHeight = "1em";
+    div.style.minWidth = "1ch";
     parent_div.appendChild(div);
   }
 }

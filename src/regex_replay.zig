@@ -83,6 +83,17 @@ fn pushMatcherState(alloc: Allocator, match_it: *regex.MatchIt, recording_items:
     });
 }
 
+fn runMatcher(alloc: Allocator, match_it: *regex.MatchIt, recording_items: *std.ArrayList(RecordingItem)) !bool {
+    while (true) {
+        const ret = (try match_it.step());
+
+        try pushMatcherState(alloc, match_it, recording_items);
+
+        if (ret == null) continue;
+        return ret.?;
+    }
+}
+
 pub fn main() !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     defer _ = gpa.deinit();
@@ -107,20 +118,11 @@ pub fn main() !void {
     defer match_it.deinit();
 
     try pushMatcherState(alloc, &match_it, &recording_items);
-    while (true) {
-        const ret = (try match_it.step());
-
-        try pushMatcherState(alloc, &match_it, &recording_items);
-
-        std.log.debug("{any}", .{match_it.match_bounds.?.items});
-        if (ret == null) continue;
-        if (ret.?) {
-            std.log.debug("\"{s}\" matches", .{args.input});
-            break;
-        } else {
-            std.log.debug("\"{s}\" does not match", .{args.input});
-            break;
-        }
+    if (runMatcher(alloc, &match_it, &recording_items)) |matched| {
+        const match_s = if (matched) "matched" else "did not match";
+        std.log.debug("\"{s}\" {s}", .{ args.input, match_s });
+    } else |_| {
+        std.log.err("Failed to run matcher", .{});
     }
 
     var matcher_names = try alloc.alloc([]const u8, match_it.sequence.len);
