@@ -31,6 +31,59 @@ pub fn compile(alloc: Allocator, regex: []const u8) Error!Matcher {
     };
 }
 
+pub const MatchBounds = struct {
+    start: usize,
+    end: usize,
+};
+
+pub const MatchIt = struct {
+    s: []const u8,
+    sequence: []MatchItem,
+
+    start_pos: usize = 0,
+    string_pos: usize = 0,
+    sequence_pos: usize = 0,
+
+    match_bounds: ?std.ArrayList(MatchBounds) = null,
+
+    pub fn deinit(self: *MatchIt) void {
+        if (self.match_bounds) |*b| b.deinit();
+    }
+
+    // If fails iterator is in invalid state
+    pub fn step(self: *MatchIt) !?bool {
+        if (self.start_pos >= self.s.len) {
+            return false;
+        }
+
+        if (self.sequence_pos >= self.sequence.len) {
+            return true;
+        }
+
+        const match_item = &self.sequence[self.sequence_pos];
+        if (!match_item.startsWith(self.s, self.string_pos)) {
+            self.start_pos += 1;
+            self.string_pos = self.start_pos;
+            self.sequence_pos = 0;
+            if (self.match_bounds) |*mb| mb.clearRetainingCapacity();
+            return null;
+        }
+
+        const start = self.string_pos;
+        self.string_pos += match_item.numBytes();
+
+        if (self.match_bounds) |*match_bounds| {
+            try match_bounds.append(.{
+                .start = start,
+                .end = self.string_pos,
+            });
+        }
+
+        self.sequence_pos += 1;
+        return null;
+    }
+};
+
 pub const Matcher = struct {
     sequence: []MatchItem = &.{},
 
@@ -38,18 +91,29 @@ pub const Matcher = struct {
         alloc.free(self.sequence);
     }
 
-    pub fn matches(self: *const Matcher, s: []const u8) bool {
-        blk: for (0..s.len) |start_pos| {
-            var string_pos: usize = start_pos;
-            for (self.sequence) |match_item| {
-                if (!match_item.startsWith(s, string_pos)) {
-                    continue :blk;
-                }
-                string_pos += match_item.numBytes();
-            }
-            return true;
+    pub fn matches(self: *const Matcher, s: []const u8) Error!bool {
+        var match_it = self.makeIt(s);
+        defer match_it.deinit();
+
+        while (true) {
+            const ret = try match_it.step();
+            return ret orelse continue;
         }
-        return false;
+    }
+
+    pub fn makeIt(self: *const Matcher, s: []const u8) MatchIt {
+        return MatchIt{
+            .s = s,
+            .sequence = self.sequence,
+        };
+    }
+
+    pub fn makeDebugIt(self: *const Matcher, alloc: Allocator, s: []const u8) MatchIt {
+        return MatchIt{
+            .s = s,
+            .sequence = self.sequence,
+            .match_bounds = std.ArrayList(MatchBounds).init(alloc),
+        };
     }
 };
 

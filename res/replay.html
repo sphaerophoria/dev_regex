@@ -1,0 +1,28 @@
+<!doctype html>
+<html>
+  <head>
+    <script src="replay.js"></script>
+    <style>
+      .string-pos {
+        position: relative;
+      }
+      .string-pos div {
+        position: absolute;
+        pointer-events: none;
+        left: -1ch;
+        top: 1em;
+        width: 100px;
+        height: 100px;
+        color: red;
+      }
+    </style>
+  </head>
+  <body>
+    <h2>Regex components</h2>
+    <div id="regex"></div>
+    <h2>Input text</h2>
+    <div id="input"></div>
+    <h2>Timeline</h2>
+    <input id="replay_state" type="range" min="0" />
+  </body>
+</html>

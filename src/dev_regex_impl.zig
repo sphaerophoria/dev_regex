@@ -61,7 +61,7 @@ pub const File = struct {
             const next_in_line = self.in_buf.items[0..newline_pos];
 
             if (self.matcher) |matcher| {
-                if (matcher.matches(next_in_line)) {
+                if (try matcher.matches(next_in_line)) {
                     try self.out_buf.appendSlice(self.alloc, next_in_line);
                     try shiftBuf(self.alloc, &self.in_buf, next_in_line.len + 1);
                     return self.readOutputBuf(ptr, size);

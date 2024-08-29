@@ -19,6 +19,8 @@ in
       clang
       lld
       llvm
+      nodePackages.prettier
+      nodePackages.jshint
     ]
     ++ pkgs.linux.nativeBuildInputs);
 }).env

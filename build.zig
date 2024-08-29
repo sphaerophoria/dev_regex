@@ -70,4 +70,13 @@ pub fn build(b: *std.Build) !void {
     try buildKernelObject(b, opt);
     try buildTestApp(b, opt);
     try buildTests(b, host_target);
+
+    const regex_replay = b.addExecutable(.{
+        .name = "regex_replay",
+        .root_source_file = b.path("src/regex_replay.zig"),
+        .target = host_target,
+        .optimize = opt,
+    });
+
+    b.installArtifact(regex_replay);
 }
